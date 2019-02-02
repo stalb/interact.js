@@ -16,6 +16,8 @@ export class Interaction<T extends ActionName = any> {
 
   // the target element of the interactable
   element: Element = null
+  rect: Interact.Rect & Interact.Rect2
+  edges: Partial<Interact.Rect>
 
   _signals: utils.Signals
 
@@ -144,6 +146,8 @@ export class Interaction<T extends ActionName = any> {
 
     this.target       = target
     this.element      = element
+    this.rect         = target.getRect(element);
+    this.edges        = this.prepared.edges;
     this._interacting = this._doPhase({
       interaction: this,
       event: this.downEvent,
@@ -441,6 +445,17 @@ export class Interaction<T extends ActionName = any> {
     }
 
     const iEvent = signalArg.iEvent = this._createPreparedEvent(event, phase, preEnd, type)
+    const { rect } = this;
+
+    if (rect) {
+      // update the rect modifications
+      const edges = this.edges || this.prepared.edges || { left: true, right: true, top: true, bottom: true };
+
+      if (edges.top   ) { rect.top    += iEvent.delta.y; }
+      if (edges.bottom) { rect.bottom += iEvent.delta.y; }
+      if (edges.left  ) { rect.left   += iEvent.delta.x; }
+      if (edges.right ) { rect.right  += iEvent.delta.x; }
+    }
 
     this._signals.fire(`action-${phase}`, signalArg)
 
